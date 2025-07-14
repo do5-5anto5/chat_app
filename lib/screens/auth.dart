@@ -8,7 +8,19 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-    var isLogin = true;
+  final _form = GlobalKey<FormState>();
+  var _isLogin = true;
+  var _enteredEmail = '';
+  var _enteredPassword = '';
+  void _submit() {
+    final isValid = _form.currentState!.validate();
+    if (!isValid) {
+      return;
+    }
+    _form.currentState!.save();
+    print(_enteredEmail);
+    print(_enteredPassword);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +47,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Form(
+                      key: _form,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -46,25 +59,54 @@ class _AuthScreenState extends State<AuthScreen> {
                             keyboardType: TextInputType.emailAddress,
                             autocorrect: false,
                             textCapitalization: TextCapitalization.none,
+                            validator: (value) {
+                              if (value == null ||
+                                  value.trim().isEmpty ||
+                                  !value.contains('@')) {
+                                return 'Please enter a valid email address.';
+                              }
+                              return null;
+                            },
+                            onSaved: (value) {
+                              _enteredEmail = value!;
+                            }
                           ),
                           TextFormField(
+                            textInputAction: TextInputAction.next,
                             decoration: const InputDecoration(
                               labelText: 'Password',
                             ),
                             obscureText: true,
+                            validator: (value) {
+                              if (value == null ||
+                                  value.trim().length < 6) {
+                                return 'Password must be at least 6 characters long.';
+                              }
+                              return null;
+                            },
+                            onSaved: (value) {
+                              _enteredPassword = value!;
+                            }
                           ),
                           const SizedBox(height: 12),
-                          ElevatedButton(onPressed: () {},
-                              child: Text(isLogin ? 'Login' : 'Sign Up')
+                          ElevatedButton(
+                            onPressed: () {
+                              _submit();
+                            },
+                            child: Text(_isLogin ? 'Login' : 'Sign Up'),
                           ),
-                          const SizedBox(height: 12),
-                          TextButton(onPressed: () {
-                            setState(() {
-                              isLogin = !isLogin;
-                            });
-                          },
-                              child: Text(isLogin ? 'Create new account' : 'I already have an account')
-                          )
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _isLogin = !_isLogin;
+                              });
+                            },
+                            child: Text(
+                              _isLogin
+                                  ? 'Create new account'
+                                  : 'I already have an account',
+                            ),
+                          ),
                         ],
                       ),
                     ),
