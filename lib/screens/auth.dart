@@ -1,3 +1,4 @@
+import 'package:chat_app/widget/user_image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -29,7 +30,7 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
-      if (_isLogin) {
+      if (!_isLogin) {
         // Login
         await _firebase.signInWithEmailAndPassword(
           email: _enteredEmail,
@@ -117,6 +118,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if (!_isLogin) UserImagePicker(),
                           TextFormField(
                             textInputAction: TextInputAction.next,
                             decoration: const InputDecoration(
