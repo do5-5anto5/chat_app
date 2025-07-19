@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chat_app/widget/user_image_picker.dart';
 import 'package:chat_app/utils/message_helper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ class _AuthScreenState extends State<AuthScreen> {
   var _isLogin = true;
   var _enteredEmail = '';
   var _enteredPassword = '';
+  var _username = '';
   File? _selectedImage;
 
   var _isLoading = false; // Adicionar loading state
@@ -63,7 +65,16 @@ class _AuthScreenState extends State<AuthScreen> {
 
         await storageRef.putFile(_selectedImage!);
         final imageUrl = await storageRef.getDownloadURL();
-        print(imageUrl);
+
+        // Envio de dados para Cloud Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredentials.user!.uid)
+            .set({
+          'username': _username,
+          'email': _enteredEmail,
+          'image_url': imageUrl
+        });
       }
     } on FirebaseAuthException catch (authError) {
       String message = 'Authentication failed.';
@@ -140,6 +151,20 @@ class _AuthScreenState extends State<AuthScreen> {
                               },
                             ),
                           TextFormField(
+                            enableSuggestions: false,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Username',
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty || value.trim().length <4) {
+                                return 'Please enter at least 4 characters.';
+                              }
+                              return null;
+                            },
+                            onSaved: (value) => _username = value!,
+                          ),
+                          TextFormField(
                             textInputAction: TextInputAction.next,
                             decoration: const InputDecoration(
                               labelText: 'Email Address',
@@ -155,10 +180,9 @@ class _AuthScreenState extends State<AuthScreen> {
                               }
                               return null;
                             },
-                            onSaved: (value) {
-                              _enteredEmail = value!;
-                            },
+                            onSaved: (value) =>_enteredEmail = value!
                           ),
+                          if (!_isLogin)
                           TextFormField(
                             decoration: const InputDecoration(
                               labelText: 'Password',
@@ -170,9 +194,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               }
                               return null;
                             },
-                            onSaved: (value) {
-                              _enteredPassword = value!;
-                            },
+                            onSaved: (value) => _enteredPassword = value!
                           ),
                           const SizedBox(height: 12),
                           ElevatedButton(
