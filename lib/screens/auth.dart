@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:chat_app/widget/user_image_picker.dart';
+import 'package:chat_app/utils/message_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -13,16 +16,24 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final _form = GlobalKey<FormState>();
+
   var _isLogin = true;
   var _enteredEmail = '';
   var _enteredPassword = '';
+  File? _selectedImage;
+
   var _isLoading = false; // Adicionar loading state
 
-  void _submit() async { // Tornar a função assíncrona
+  void _submit() async {
+    // Tornar a função assíncrona
     final isValid = _form.currentState!.validate();
-    if (!isValid) {
+    if (!isValid || !_isLogin && _selectedImage == null) {
+      if (mounted) {
+        MessageHelper.show(context, 'Please enter all the fields and image.');
+      }
       return;
     }
+
     _form.currentState!.save();
 
     setState(() {
@@ -67,21 +78,11 @@ class _AuthScreenState extends State<AuthScreen> {
           message = authError.message ?? 'Authentication failed.';
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+        MessageHelper.show(context, message);
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('An error occurred: $error'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+        MessageHelper.show(context, 'An error occurred: $error');
       }
     }
 
@@ -106,7 +107,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   left: 20,
                   right: 20,
                 ),
-                child: Hero(tag: 'logo', child: Image.asset('assets/images/chat.png', width: 200)),
+                child: Hero(
+                  tag: 'logo',
+                  child: Image.asset('assets/images/chat.png', width: 200),
+                ),
               ),
               Card(
                 margin: const EdgeInsets.all(20),
@@ -118,7 +122,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (!_isLogin) UserImagePicker(),
+                          if (!_isLogin)
+                            UserImagePicker(
+                              onPickImage: (pickedImage) {
+                                _selectedImage = pickedImage;
+                              },
+                            ),
                           TextFormField(
                             textInputAction: TextInputAction.next,
                             decoration: const InputDecoration(
@@ -156,10 +165,12 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           const SizedBox(height: 12),
                           ElevatedButton(
-                            onPressed: _isLoading ? null : _submit, // Desabilitar durante loading
-                            child: _isLoading
-                                ? const CircularProgressIndicator()
-                                : Text(_isLogin ? 'Login' : 'Sign Up'),
+                            onPressed: _isLoading ? null : _submit,
+                            // Desabilitar durante loading
+                            child:
+                                _isLoading
+                                    ? const CircularProgressIndicator()
+                                    : Text(_isLogin ? 'Login' : 'Sign Up'),
                           ),
                           TextButton(
                             onPressed: () {
