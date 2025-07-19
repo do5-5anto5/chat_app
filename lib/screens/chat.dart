@@ -17,8 +17,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
     await fcm.requestPermission();
 
-    final token = await fcm.getToken();
-    print('Token: $token');
+    // Send push notifications by topic.
+    fcm.subscribeToTopic('chat');
   }
 
   @override
