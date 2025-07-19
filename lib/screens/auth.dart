@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:chat_app/widget/user_image_picker.dart';
 import 'package:chat_app/utils/message_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 final _firebase = FirebaseAuth.instance;
@@ -41,7 +42,7 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
-      if (!_isLogin) {
+      if (_isLogin) {
         // Login
         await _firebase.signInWithEmailAndPassword(
           email: _enteredEmail,
@@ -49,10 +50,20 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       } else {
         // Signup
-        await _firebase.createUserWithEmailAndPassword(
+        final userCredentials = await _firebase.createUserWithEmailAndPassword(
           email: _enteredEmail,
           password: _enteredPassword,
         );
+
+        // Salvar foto do usuário
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('user_images')
+            .child('${userCredentials.user!.uid}.jpg');
+
+        await storageRef.putFile(_selectedImage!);
+        final imageUrl = await storageRef.getDownloadURL();
+        print(imageUrl);
       }
     } on FirebaseAuthException catch (authError) {
       String message = 'Authentication failed.';
