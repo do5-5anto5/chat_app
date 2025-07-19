@@ -150,6 +150,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                 _selectedImage = pickedImage;
                               },
                             ),
+                          if (!_isLogin)
                           TextFormField(
                             enableSuggestions: false,
                             textInputAction: TextInputAction.next,
@@ -182,7 +183,6 @@ class _AuthScreenState extends State<AuthScreen> {
                             },
                             onSaved: (value) =>_enteredEmail = value!
                           ),
-                          if (!_isLogin)
                           TextFormField(
                             decoration: const InputDecoration(
                               labelText: 'Password',
